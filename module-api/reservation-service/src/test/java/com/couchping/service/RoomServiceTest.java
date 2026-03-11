@@ -124,7 +124,7 @@ class RoomServiceTest {
     private RoomRequest createRoomRequest(String title) {
         return new RoomRequest(
                 title, "설명", "url", "위치", 10000, 2, "체크인 방법",
-                RoomType.PRIVATE_ROOM, PreferredGender.ANY, new ArrayList<>());
+                RoomType.PRIVATE_ROOM, PreferredGender.ANY, false, new ArrayList<>());
     }
 
     private Room createRoom(Long hostId, String title) {

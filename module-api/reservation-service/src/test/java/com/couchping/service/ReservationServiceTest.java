@@ -6,6 +6,8 @@ import com.couchping.model.ReservationErrorCode;
 import com.couchping.model.ReservationRequest;
 import com.couchping.model.ReservationStatus;
 import com.couchping.repository.ReservationRepository;
+import com.couchping.entity.Room;
+import com.couchping.repository.RoomRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,9 @@ class ReservationServiceTest {
         @Mock
         private ReservationRepository reservationRepository;
 
+        @Mock
+        private RoomRepository roomRepository;
+
         @InjectMocks
         private ReservationService reservationService;
 
@@ -44,6 +49,107 @@ class ReservationServiceTest {
 
                 // then
                 verify(reservationRepository, times(1)).save(any(Reservation.class));
+        }
+
+        @Test
+        @DisplayName("즉시 예약 생성 (성공)")
+        void createInstantReservation_Success() {
+                // given
+                Long roomId = 1L;
+                ReservationRequest request = new ReservationRequest(1L, roomId, LocalDate.now(),
+                                LocalDate.now().plusDays(1), 100000);
+                
+                Room room = Room.builder().hostId(2L).build();
+                room.updateInstantBook(true);
+
+                given(roomRepository.findById(roomId)).willReturn(Optional.of(room));
+                given(reservationRepository.existsConflictingReservation(anyLong(), any(), any(), any())).willReturn(false);
+
+                // when
+                reservationService.createInstantReservation(request);
+
+                // then
+                // In ReservationService, the created reservation is saved with CONFIRMED status.
+                // We verify that save was called.
+                verify(reservationRepository, times(1)).save(argThat(res -> res.getStatus() == ReservationStatus.CONFIRMED));
+        }
+
+        @Test
+        @DisplayName("즉시 예약 생성 실패 - 즉시 예약 허용 안됨")
+        void createInstantReservation_Fail_NotAllowed() {
+                // given
+                Long roomId = 1L;
+                ReservationRequest request = new ReservationRequest(1L, roomId, LocalDate.now(),
+                                LocalDate.now().plusDays(1), 100000);
+                
+                Room room = Room.builder().hostId(2L).build();
+                room.updateInstantBook(false);
+
+                given(roomRepository.findById(roomId)).willReturn(Optional.of(room));
+
+                // when & then
+                CouchPingException ex = assertThrows(CouchPingException.class, () -> reservationService.createInstantReservation(request));
+                assertEquals(ReservationErrorCode.INSTANT_BOOK_NOT_ALLOWED, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("즉시 예약 생성 실패 - 날짜 중복 (더블 부킹)")
+        void createInstantReservation_Fail_DoubleBooking() {
+                // given
+                Long roomId = 1L;
+                ReservationRequest request = new ReservationRequest(1L, roomId, LocalDate.now(),
+                                LocalDate.now().plusDays(1), 100000);
+                
+                Room room = Room.builder().hostId(2L).build();
+                room.updateInstantBook(true);
+
+                given(roomRepository.findById(roomId)).willReturn(Optional.of(room));
+                // 중복 발생
+                given(reservationRepository.existsConflictingReservation(anyLong(), any(), any(), any())).willReturn(true);
+
+                // when & then
+                CouchPingException ex = assertThrows(CouchPingException.class, () -> reservationService.createInstantReservation(request));
+                assertEquals(ReservationErrorCode.DOUBLE_BOOKING, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("수동 예약 승인 (성공)")
+        void confirmReservation_Success() {
+                // given
+                Long reservationId = 1L;
+                Reservation reservation = Reservation.builder()
+                        .roomId(1L)
+                        .checkInDate(LocalDate.now())
+                        .checkOutDate(LocalDate.now().plusDays(1))
+                        .build();
+                
+                given(reservationRepository.findById(reservationId)).willReturn(Optional.of(reservation));
+                given(reservationRepository.existsConflictingReservation(anyLong(), any(), any(), any())).willReturn(false);
+
+                // when
+                reservationService.confirmReservation(reservationId);
+
+                // then
+                assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
+        }
+
+        @Test
+        @DisplayName("수동 예약 승인 실패 - 날짜 중복 (더블 부킹)")
+        void confirmReservation_Fail_DoubleBooking() {
+                // given
+                Long reservationId = 1L;
+                Reservation reservation = Reservation.builder()
+                        .roomId(1L)
+                        .checkInDate(LocalDate.now())
+                        .checkOutDate(LocalDate.now().plusDays(1))
+                        .build();
+                
+                given(reservationRepository.findById(reservationId)).willReturn(Optional.of(reservation));
+                given(reservationRepository.existsConflictingReservation(anyLong(), any(), any(), any())).willReturn(true);
+
+                // when & then
+                CouchPingException ex = assertThrows(CouchPingException.class, () -> reservationService.confirmReservation(reservationId));
+                assertEquals(ReservationErrorCode.DOUBLE_BOOKING, ex.getErrorCode());
         }
 
         @Test
