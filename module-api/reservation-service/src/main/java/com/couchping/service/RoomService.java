@@ -45,6 +45,10 @@ public class RoomService {
                 request.roomType(),
                 request.preferredGender(),
                 request.amenities());
+
+        if (request.isInstantBook() != null) {
+            room.updateInstantBook(request.isInstantBook());
+        }
     }
 
     /**

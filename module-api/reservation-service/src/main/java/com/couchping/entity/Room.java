@@ -61,6 +61,9 @@ public class Room extends BaseTimeEntity {
     private String initialQuestion; // 호스트가 게스트에게 묻는 첫 질문
 
     @Column(nullable = false)
+    private boolean isInstantBook = false; // 즉시 예약 허용 여부
+
+    @Column(nullable = false)
     private boolean isActive = true; // 숙소 활성화 상태
 
     @Column(nullable = false)
@@ -87,6 +90,7 @@ public class Room extends BaseTimeEntity {
         this.roomType = roomType;
         this.preferredGender = preferredGender;
         this.initialQuestion = initialQuestion;
+        this.isInstantBook = false; // 기본값
         this.isActive = true;
         this.isDeleted = false;
     }
@@ -110,6 +114,10 @@ public class Room extends BaseTimeEntity {
 
     public void updateStatus(boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public void updateInstantBook(boolean isInstantBook) {
+        this.isInstantBook = isInstantBook;
     }
 
     public void delete() {

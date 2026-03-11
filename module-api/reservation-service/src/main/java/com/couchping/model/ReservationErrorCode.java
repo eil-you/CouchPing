@@ -12,8 +12,10 @@ public enum ReservationErrorCode implements BaseErrorCode {
     ROOM_NOT_AVAILABLE(2001, "Room not available for selected dates", HttpStatus.BAD_REQUEST),
     RESERVATION_NOT_FOUND(2002, "Reservation not found", HttpStatus.NOT_FOUND),
     INVALID_DATE(2003, "Invalid date", HttpStatus.BAD_REQUEST),
-    CONCURRENCY_ERROR(2004, "Try again in a few moments", HttpStatus.CONFLICT),
-    SYSTEM_ERROR(2005, "System error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+    DOUBLE_BOOKING(2004, "Double booking", HttpStatus.CONFLICT),
+    INSTANT_BOOK_NOT_ALLOWED(2005, "This room does not allow instant booking", HttpStatus.BAD_REQUEST),
+    GUEST_RATING_TOO_LOW(2006, "Guest rating must be at least 3.0 for instant booking", HttpStatus.FORBIDDEN),
+    SYSTEM_ERROR(2007, "System error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;

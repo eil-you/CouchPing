@@ -35,7 +35,7 @@ class ReservationControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    @DisplayName("?덉빟 ?앹꽦 API")
+    @DisplayName("일반 예약 생성 API")
     void createReservation() throws Exception {
         // given
         ReservationRequest request = new ReservationRequest(1L, 1L, LocalDate.now(), LocalDate.now().plusDays(1),
@@ -51,7 +51,23 @@ class ReservationControllerTest {
     }
 
     @Test
-    @DisplayName("?ъ슜?먮퀎 ?덉빟 議고쉶 API")
+    @DisplayName("우수 게스트 즉시 예약 (프리패스) 생성 API")
+    void createInstantReservation() throws Exception {
+        // given
+        ReservationRequest request = new ReservationRequest(1L, 1L, LocalDate.now(), LocalDate.now().plusDays(1),
+                100000);
+
+        // when & then
+        mockMvc.perform(post("/api/v1/reservations/instant")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(reservationService).createInstantReservation(any(ReservationRequest.class));
+    }
+
+    @Test
+    @DisplayName("유저별 예약 내역 조회 API")
     void getReservationsByUserId() throws Exception {
         // given
         Long userId = 1L;
@@ -74,7 +90,7 @@ class ReservationControllerTest {
     }
 
     @Test
-    @DisplayName("?덉빟 痍⑥냼 API")
+    @DisplayName("예약 취소 API")
     void cancelReservation() throws Exception {
         // given
         Long reservationId = 1L;

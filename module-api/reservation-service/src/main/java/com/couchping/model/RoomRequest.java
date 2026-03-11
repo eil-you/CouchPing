@@ -13,6 +13,7 @@ public record RoomRequest(
         String initialQuestion,
         RoomType roomType,
         PreferredGender preferredGender,
+        Boolean isInstantBook,
         List<AmenityType> amenities) {
     public Room toEntity(Long hostId) {
         Room room = Room.builder()
@@ -27,6 +28,10 @@ public record RoomRequest(
                 .roomType(roomType)
                 .preferredGender(preferredGender)
                 .build();
+
+        if (isInstantBook != null) {
+            room.updateInstantBook(isInstantBook);
+        }
 
         if (amenities != null) {
             amenities.forEach(room::addAmenity);
