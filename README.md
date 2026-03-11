@@ -32,9 +32,10 @@
 - **Extensible User Profile**: 사용자의 언어 능력, 라이프스타일 태그 등 복잡한 개인 정보를 효율적으로 관리하기 위한 1:N 정규화 설계를 했습니다.
 - **Matching Workflow**: 단순 결제가 아닌 '요청-수락-완료'로 이어지는 호스트 의사 결정 프로세스를 구현했습니다.
 
-### 2. 분산 락(Distributed Lock)을 통한 정합성 보장
-- **Redisson 기반 구현**: `reservation-service`에서 동시 예약 요청 시 발생하는 데이터 정합성 문제(Overbooking)를 해결하기 위해 Redis 분산 락을 도입했습니다.
-- **TryLock 패턴**: 락 획득 대기 시간과 만료 시간을 설정하여 데드락(Deadlock)을 방지하고 시스템 안정성을 높였습니다.
+### 2. 분산 락(Distributed Lock)을 통한 정합성 보장 및 성능 최적화
+- **우수 게스트 즉시 예약 (Instant Book)**: 호스트가 허용한 방에 대해, 검증된 우수 게스트(평점 3.0 이상)가 수동 승인 절차 없이 예약과 동시에 확정(CONFIRMED)받는 비즈니스 모델을 추가했습니다. 
+- **Redisson 기반 세밀한 분산락 (Fine-grained Lock) 적용**: 성수기 인기 숙소 예약 시 발생하는 선착순 트래픽 병목과 초과 예약(Double Booking) 대참사를 방지하기 위해 커스텀 `@DistributedLock` AOP를 구현했습니다.
+- **SpEL 동적 키 기반 병목 해결**: `CustomSpringELParser` 헬퍼 클래스를 자체 구현하여, 메서드 인자로 넘어온 숙소 객체(`request.roomId()`)를 파싱해 락 키를 동적으로 생성(`room:lock:{id}`)함으로써, 무관한 다른 숙소의 예약 요청까지 블로킹되는 전역 병목 현상을 완벽하게 제거했습니다.
 
 ### 3. MSA (Microservice Architecture)
 - **Service Discovery (Eureka)**: 각 서비스의 위치를 동적으로 관리하여 확장성을 확보했습니다.
