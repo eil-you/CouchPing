@@ -30,21 +30,21 @@ public class ReservationController {
         return ResponseEntity.ok("Instant reservation created successfully");
     }
 
-    // ?덉빟 ?뺤젙
+    // 수동 예약 승인 (호스트)
     @PutMapping("/{reservationId}/confirm")
     public ResponseEntity<String> confirmReservation(@PathVariable Long reservationId) {
         reservationService.confirmReservation(reservationId);
         return ResponseEntity.ok("Reservation confirmed successfully");
     }
 
-    // ?ъ슜?먮퀎 ?꾩껜 ?덉빟 由ъ뒪??議고쉶
+    // 유저(게스트)별 전체 예약 리스트 조회
     @GetMapping("/{userId}")
     public ResponseEntity<List<Reservation>> getReservationsByUserId(@PathVariable Long userId) {
         List<Reservation> reservations = reservationService.getReservationsByUserId(userId);
         return ResponseEntity.ok(reservations);
     }
 
-    // ?덉빟 痍⑥냼
+    // 예약 취소
     @PutMapping("/{reservationId}/cancel")
     public ResponseEntity<String> cancelReservation(@PathVariable Long reservationId) {
         reservationService.cancelReservation(reservationId);
